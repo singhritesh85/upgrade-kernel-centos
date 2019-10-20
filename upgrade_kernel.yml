@@ -1,0 +1,32 @@
+---
+- name: upgrade_kernel.yml
+  hosts: all
+  tasks: 
+  - name: create a directory
+    file:
+      path: /root/upgrade-kernel
+      state: directory
+
+  - name: download from the link
+    get_url:
+      url: https://elrepo.org/linux/elrepo/el7/x86_64/RPMS/elrepo-release-7.0-4.el7.elrepo.noarch.rpm
+      dest: /root/upgrade-kernel/
+  
+  - name: upgrade using yum
+    yum:
+      name: /root/upgrade-kernel/elrepo-release-7.0-4.el7.elrepo.noarch.rpm
+      state: latest
+ 
+  - name: install kernel
+    shell: yum --enablerepo=elrepo-kernel install kernel-ml -y
+
+  - name: Reboot immediately if there was a change
+    shell: "sleep 5 && reboot"
+    async: 1
+    poll: 0
+  
+  - name: Wait for the reboot to complete if there was a change
+    wait_for_connection:
+      delay: 60
+      timeout: 300
+      
